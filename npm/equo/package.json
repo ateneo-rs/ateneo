@@ -1,5 +1,5 @@
 {
-  "name": "equo",
+  "name": "@equo/cli",
   "version": "0.0.1",
   "description": "Equo: institutional open access repository written in Rust. Repositorio abierto desde Ecuador, la Mitad del Mundo.",
   "bin": { "equo": "bin/equo.js" },
@@ -7,5 +7,5 @@
   "license": "AGPL-3.0-or-later",
   "author": "James Paul Vizuete Davila (leochrono)",
   "homepage": "https://github.com/equo-rs/equo",
-  "repository": { "type": "git", "url": "https://github.com/equo-rs/equo" }
+  "repository": { "type": "git", "url": "git+https://github.com/equo-rs/equo.git" }
 }
