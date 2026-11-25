@@ -1,0 +1,59 @@
+name: 🐛 Bug report / Reportar un error
+description: Something is not working as expected. / Algo no funciona como debería.
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! You can write in English or Spanish.
+        ¡Gracias por reportar! Puedes escribir en español o en inglés.
+
+        ⚠️ **Security issues must be reported privately** (see SECURITY.md).
+  - type: input
+    id: version
+    attributes:
+      label: Equo version / Versión de Equo
+      description: Run `equo --version` or check Sistema → Actualizaciones.
+      placeholder: "0.3.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system / Sistema operativo
+      options:
+        - Linux
+        - Windows
+        - macOS
+        - Other / Otro
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened? / ¿Qué pasó?
+      description: Describe the problem. / Describe el problema.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect? / ¿Qué esperabas que pasara?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / Pasos para reproducirlo
+      placeholder: |
+        1. Go to... / Ir a...
+        2. Click on... / Presionar...
+        3. See error / Ver el error
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots / Registros o capturas
+      description: Remove any personal data before pasting. / Quita datos personales antes de pegar.
+      render: shell

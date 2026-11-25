@@ -1,0 +1,31 @@
+name: 💡 Feature request / Sugerir una función
+description: Suggest an idea for Equo. / Sugiere una idea para Equo.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does it solve? / ¿Qué problema resuelve?
+      description: Describe the need, not only the solution. / Describe la necesidad, no solo la solución.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution / Solución propuesta
+    validations:
+      required: true
+  - type: dropdown
+    id: who
+    attributes:
+      label: Who benefits? / ¿A quién beneficia?
+      multiple: true
+      options:
+        - Readers / Lectores
+        - Library staff / Personal de biblioteca
+        - IT administrators / Administradores de TI
+        - Developers / Desarrolladores
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered / Alternativas consideradas
