@@ -12,8 +12,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: Equo version / Versión de Equo
-      description: Run `equo --version` or check Sistema → Actualizaciones.
+      label: Ateneo version / Versión de Ateneo
+      description: Run `ateneo --version` or check Sistema → Actualizaciones.
       placeholder: "0.3.0"
     validations:
       required: true

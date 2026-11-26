@@ -12,7 +12,7 @@ updates:
         patterns: ["*"]
 
   - package-ecosystem: "npm"
-    directory: "/npm/equo"
+    directory: "/npm/ateneo"
     schedule:
       interval: "weekly"
       day: "monday"

@@ -1,5 +1,5 @@
 name: 💡 Feature request / Sugerir una función
-description: Suggest an idea for Equo. / Sugiere una idea para Equo.
+description: Suggest an idea for Ateneo. / Sugiere una idea para Ateneo.
 labels: ["enhancement"]
 body:
   - type: textarea

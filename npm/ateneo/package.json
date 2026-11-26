@@ -1,0 +1,11 @@
+{
+  "name": "ateneo",
+  "version": "0.0.1",
+  "description": "Ateneo: institutional open access repository written in Rust. Archivo de Tesis, Ensayos, Notas, Ediciones y Obras.",
+  "bin": { "ateneo": "bin/ateneo.js" },
+  "keywords": ["repository", "institutional-repository", "dspace", "oai-pmh", "iiif", "open-access"],
+  "license": "AGPL-3.0-or-later",
+  "author": "James Paul Vizuete Davila (leochrono)",
+  "homepage": "https://github.com/ateneo-rs/ateneo",
+  "repository": { "type": "git", "url": "git+https://github.com/ateneo-rs/ateneo.git" }
+}

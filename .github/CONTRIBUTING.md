@@ -1,11 +1,11 @@
-# Contributing to Equo
+# Contributing to Ateneo
 
 Thank you for your interest in contributing!
 ¡Gracias por tu interés en colaborar! Puedes escribir en español o en inglés.
 
 ## Developer Certificate of Origin (DCO)
 
-Equo uses the [Developer Certificate of Origin](https://developercertificate.org/).
+Ateneo uses the [Developer Certificate of Origin](https://developercertificate.org/).
 By adding a `Signed-off-by` line to your commits, you certify that you wrote
 the code or otherwise have the right to submit it under the project's license
 (AGPL-3.0-or-later).

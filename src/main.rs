@@ -2,6 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 fn main() {
-    println!("Equo - Repositorio abierto desde Ecuador, la Mitad del Mundo");
-    println!("En desarrollo. Pronto: equo init");
+    println!("Ateneo - Archivo de Tesis, Ensayos, Notas, Ediciones y Obras");
+    println!("En desarrollo. Pronto: ateneo init");
 }

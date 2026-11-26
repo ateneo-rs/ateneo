@@ -1,11 +1,11 @@
 [package]
-name = "equo"
+name = "ateneo"
 version = "0.0.1"
 edition = "2024"
-description = "Institutional open access repository written in Rust (OAI-PMH, IIIF, SWORD). Repositorio abierto desde Ecuador, la Mitad del Mundo."
+description = "Ateneo: institutional open access repository written in Rust (OAI-PMH, IIIF, SWORD). Archivo de Tesis, Ensayos, Notas, Ediciones y Obras."
 license = "AGPL-3.0-or-later"
 authors = ["James Paul Vizuete Davila <jamespnpm1624@outlook.com>"]
-repository = "https://github.com/equo-rs/equo"
+repository = "https://github.com/ateneo-rs/ateneo"
 keywords = ["repository", "oai-pmh", "iiif", "open-access", "dspace"]
 categories = ["web-programming"]
 
