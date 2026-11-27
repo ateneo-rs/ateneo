@@ -151,7 +151,7 @@ En la consola solo se instala y se responden unas preguntas básicas; todo lo de
 Al ejecutarse por primera vez, Ateneo pregunta el idioma del instalador, el dominio, la base de datos (con Docker se detecta sola), el nombre, correo y contraseña del super admin (mínimo 15 caracteres), el idioma del sitio y la zona horaria. Como la cuenta se crea en la consola, nadie puede adelantarse a crearla desde el navegador.
 
 > **Mockup · preguntas de instalación en la consola** ("La consola solo pregunta lo básico, paso a paso").
-> Una terminal que ejecuta `docker compose exec ateneo ateneo init` y muestra las preguntas al estilo cliclack: idioma del instalador (Español), dominio (repositorio.demo.edu.ec), base de datos (PostgreSQL detectado por Docker), nombre y correo del super administrador, contraseña de mínimo 15 caracteres con confirmación, idioma principal y zona horaria (America/Guayaquil, detectada) y "¿Todo correcto?".
+> Una terminal que ejecuta `docker compose exec ateneo ateneo init` y muestra las preguntas al estilo cliclack: idioma del instalador (Español), dominio (repositorio.demo.edu.ec), base de datos (PostgreSQL detectado por Docker), nombre y correo del super administrador (Ana Pérez · admin@demo.edu.ec), contraseña de mínimo 15 caracteres con confirmación, idioma principal y zona horaria (Español · America/Guayaquil, detectada) y "¿Todo correcto?" (Sí · creando base de datos y cuenta…).
 > Termina con "Listo. Abre https://repositorio.demo.edu.ec e inicia sesión".
 
 ### Estados del sitio
@@ -168,7 +168,7 @@ Al ejecutarse por primera vez, Ateneo pregunta el idioma del instalador, el domi
 > A la derecha, solo si se eligieron los valores por defecto: el nombre "Instituto Tecnológico Demo", el texto "Este repositorio estará disponible pronto" y un botón "Vista previa para el personal".
 
 > **Mockup · portada de Ateneo por defecto** ("Recién instalado, el sitio muestra la portada de Ateneo").
-> Una cabecera con el logo de Ateneo y los enlaces Buscar, Colecciones e Iniciar sesión, el título "Bienvenido a tu nuevo repositorio" y un aviso para iniciar sesión como super administrador, con un buscador de tesis, artículos y autores.
+> Una cabecera con el logo de Ateneo y los enlaces Buscar, Colecciones e Iniciar sesión, el título "Bienvenido a tu nuevo repositorio" y el aviso "Ateneo está instalado. Inicia sesión como super administrador para configurarlo.", con un buscador de tesis, artículos y autores.
 > Debajo hay tres tarjetas (Qué es Ateneo, Documentación y Obras de ejemplo) y un pie con "Hecho con Ateneo" y "Cookies · Cómo usamos tus datos".
 
 ### Asistente de configuración
@@ -188,10 +188,10 @@ Al entrar por primera vez, el super admin elige **Configurar paso a paso** o **U
 
 > **Mockup · bienvenida y paso Institución** ("El super admin elige: asistente paso a paso o valores por defecto").
 > A la izquierda, "Bienvenido a Ateneo. ¿Configurar tu repositorio ahora? Toma unos 10 minutos." con los botones "Configurar paso a paso" y "Usar valores por defecto", y la nota "Puedes cambiar todo después en el panel".
-> A la derecha, el "Paso 1 de 10 · Institución" con 10 puntos de avance, los campos nombre de la institución y siglas, una zona para arrastrar el logo y los botones Omitir y Siguiente.
+> A la derecha, el "Paso 1 de 10 · Institución" con 10 puntos de avance, los campos nombre de la institución (Instituto Tecnológico Demo) y siglas (ITD), una zona para arrastrar el logo y los botones Omitir y Siguiente.
 
 > **Mockup · paso Datos legales y resumen final** ("El asistente pide los datos legales y termina con un resumen").
-> A la izquierda, el "Paso 7 de 10 · Datos legales" con razón social, dirección, correo de contacto y responsable de protección de datos, y la nota "Con estos datos se generan las páginas legales".
+> A la izquierda, el "Paso 7 de 10 · Datos legales" con razón social (Instituto Tecnológico Demo), dirección (Av. Central 100, Ciudad Demo), correo de contacto (repositorio@demo.edu.ec) y responsable de protección de datos (Nombre del delegado), y la nota "Con estos datos se generan las páginas legales".
 > A la derecha, el "Paso 10 de 10 · Resumen" (institución, tipografía Literata + Atkinson, inicio de sesión Google · demo.edu.ec, colecciones por carreras y respaldos diarios a las 02:00) con el botón "Terminar y publicar".
 
 ### Valores por defecto
@@ -331,7 +331,7 @@ Todo lo que publica la institución se busca, lee, descarga y cita sin cuenta, c
 
 > **Mockup · portada de la institución en escritorio y celular** ("La portada lleva la identidad de cada institución").
 > En escritorio: cabecera con el logo y el nombre "Instituto Tecnológico Demo", los enlaces Buscar, Colecciones e Iniciar sesión, y una franja de color con "Repositorio Institucional" y el buscador. Debajo, "Últimas obras" a la izquierda y "Colecciones" a la derecha (Software, Enfermería, Contabilidad), con el pie "Hecho con Ateneo" y "Cookies · Cómo usamos tus datos".
-> En celular, la misma portada en una columna: siglas "ITD", menú de hamburguesa, buscador y últimas obras.
+> En celular, la misma portada en una columna: siglas "ITD", menú de hamburguesa, la franja "Repositorio" con el buscador y últimas obras.
 
 ### Direcciones
 
@@ -485,7 +485,7 @@ La página **"Cómo usamos tus datos"** explica qué se mide y para qué, y ofre
 > Abajo, el interruptor "No contar mis visitas" con la nota "También respetamos la señal Global Privacy Control".
 
 > **Mockup · política de cookies y aviso Aceptar / Rechazar** ("La política de cookies se genera sola y el aviso solo aparece con terceros").
-> Arriba, la "Política de cookies" con una tabla de nombre, uso y duración: `ateneo_sesion` (mantener la sesión iniciada, hasta cerrar sesión), `ateneo_csrf` (seguridad de los formularios, sesión) y Preferencias (accesibilidad y estilo de cita, hasta borrarlas), y la nota "Este sitio solo usa cookies necesarias".
+> Arriba, la "Política de cookies" con una tabla de nombre, uso y duración: `ateneo_sesion` (mantener la sesión iniciada, hasta cerrar sesión), `ateneo_csrf` (seguridad de los formularios, sesión) y Preferencias (accesibilidad y estilo de cita, hasta borrarlas), y la nota "Este sitio solo usa cookies necesarias. MÃ¡s informaciÃ³n".
 > Abajo, un aviso de ejemplo "Este sitio usa Google Analytics, agregado por la institución" con los botones Rechazar y Aceptar del mismo tamaño; la nota aclara que el aviso solo aparece si la institución agrega servicios de terceros.
 
 ### Páginas legales
@@ -542,7 +542,7 @@ El revisor aprueba, devuelve con comentarios o corrige. Cada cambio guarda una f
 
 > **Mockup · revisión de una obra e historial** ("El revisor aprueba o devuelve con comentarios y puede restaurar versiones").
 > A la izquierda, la vista previa del documento. A la derecha, la lista "Revisión" con marcas verdes (Metadatos completos, Licencia y autorización, Texto buscable con OCR listo), un campo "Comentario para el depositante" y los botones "Aprobar y publicar" y "Devolver".
-> Debajo, el "Historial de versiones": v3 hoy de Luis Mora, y v2 de ayer y v1 del 20/11 de Ana Pérez, cada una con "Ver · Restaurar".
+> Debajo, el "Historial de versiones": v3 de hoy, de Luis Mora (la versión actual), y v2 de ayer y v1 del 20/11, de Ana Pérez, estas dos con "Ver · Restaurar".
 
 ### Colecciones y personas
 
@@ -790,7 +790,7 @@ La idea es sumar libros académicos de acceso abierto para leerlos en el visor d
 - **Falta investigar:** factibilidad, API de SciELO, licencias de CLACSO, espacio en disco y confirmar que pedir sesión no contradice las licencias Creative Commons. Si no es factible, no se agrega.
 
 > **Mockup · biblioteca abierta (en investigación)** ("La biblioteca abierta elegiría fuentes, idioma y licencias antes de importar").
-> Con la etiqueta "En investigación", tres columnas: Fuentes (DOAB y OAPEN y SciELO Libros marcadas; CLACSO y Project Gutenberg sin marcar), Filtros (idioma español; temas ambiente, software y salud; licencias CC BY, BY-SA, BY-NC y BY-ND) y Modo (Bajo demanda elegido, o Copia completa).
+> Con la etiqueta "En investigación", tres columnas: Fuentes ("DOAB y OAPEN" y "SciELO Libros" marcadas; CLACSO y Project Gutenberg sin marcar), Filtros (idioma español; temas ambiente, software y salud; licencias CC BY, BY-SA, BY-NC y BY-ND) y Modo (Bajo demanda elegido, o Copia completa).
 > Abajo, "Vista previa: 1.240 libros encontrados · Unos 4 GB si se copian todos · los de "solo uso personal" se excluyen", con el botón Importar.
 
 ### Asistente de IA (futuro)
