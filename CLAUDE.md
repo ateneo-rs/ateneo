@@ -7,6 +7,7 @@ Repositorio institucional en Rust, alternativa a DSpace. Licencia AGPL-3.0-or-la
 - No agregar la línea Co-Authored-By en los commits.
 - Cada archivo de código lleva el encabezado SPDX: AGPL-3.0-or-later.
 - Responde y explica en español sencillo.
+- Antes de planificar o construir, consulta docs/planificacion.md (y los PDF de docs/planificacion/ para ver los mockups).
 
 ## Stack
 Rust (edición 2024), Axum, sqlx con PostgreSQL, Tantivy, minijinja para el sitio público,
