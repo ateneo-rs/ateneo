@@ -1,12 +1,16 @@
 // SPDX-FileCopyrightText: 2026 James Paul Vizuete Davila
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+mod status;
+
 use std::time::Duration;
 
 use sqlx::migrate::{MigrateError, Migrator};
 use sqlx::postgres::{PgPool, PgPoolOptions};
 
 use crate::config::DatabaseConfig;
+
+pub use status::{AppliedMigration, PendingMigration, Status, status};
 
 pub static MIGRATOR: Migrator = sqlx::migrate!();
 

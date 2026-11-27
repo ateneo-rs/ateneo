@@ -20,6 +20,26 @@ async fn migrations_create_central_tables(pool: PgPool) {
 }
 
 #[sqlx::test(migrations = false)]
+async fn status_lists_pending_then_applied_migrations(pool: PgPool) {
+    let before = ateneo_core::db::status(&pool).await.unwrap();
+    assert!(!before.server_version.is_empty());
+    assert!(before.applied.is_empty());
+    assert_eq!(
+        before.pending.len(),
+        ateneo_core::db::MIGRATOR.iter().count()
+    );
+    assert_eq!(before.pending[0].version, 1);
+
+    ateneo_core::db::migrate(&pool).await.unwrap();
+
+    let after = ateneo_core::db::status(&pool).await.unwrap();
+    assert!(after.pending.is_empty());
+    assert_eq!(after.applied.len(), before.pending.len());
+    assert!(after.applied.iter().all(|migration| migration.success));
+    assert_eq!(after.applied[0].description, before.pending[0].description);
+}
+
+#[sqlx::test(migrations = false)]
 async fn migrations_can_run_twice(pool: PgPool) {
     ateneo_core::db::migrate(&pool).await.unwrap();
     ateneo_core::db::migrate(&pool).await.unwrap();

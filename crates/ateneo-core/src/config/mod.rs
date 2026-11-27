@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 mod error;
+mod file;
 
 use std::fmt;
 use std::fs;
@@ -11,7 +12,8 @@ use std::str::FromStr;
 
 use serde::Deserialize;
 
-pub use error::ConfigError;
+pub use error::{ConfigError, InvalidReason};
+pub use file::{Edit, FileKey, NewConfig, create_new, current_value, prepare_edit, replace};
 
 pub const DEFAULT_PATH: &str = "ateneo.toml";
 pub const DEFAULT_PORT: u16 = 8080;
@@ -67,16 +69,24 @@ struct FileDatabase {
     max_connections: Option<u32>,
 }
 
+pub fn path() -> PathBuf {
+    path_with(|name| std::env::var(name).ok())
+}
+
+pub fn path_with(env: impl Fn(&str) -> Option<String>) -> PathBuf {
+    env(ENV_CONFIG)
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from(DEFAULT_PATH))
+}
+
 impl Config {
     pub fn load() -> Result<Self, ConfigError> {
         Self::load_with(|name| std::env::var(name).ok())
     }
 
     pub fn load_with(env: impl Fn(&str) -> Option<String>) -> Result<Self, ConfigError> {
-        let (path, explicit) = match env(ENV_CONFIG) {
-            Some(path) => (PathBuf::from(path), true),
-            None => (PathBuf::from(DEFAULT_PATH), false),
-        };
+        let explicit = env(ENV_CONFIG).is_some();
+        let path = path_with(&env);
         match fs::read_to_string(&path) {
             Ok(text) => Self::from_toml(&path, &text, env),
             Err(err) if err.kind() == io::ErrorKind::NotFound && !explicit => {
@@ -94,12 +104,15 @@ impl Config {
         text: &str,
         env: impl Fn(&str) -> Option<String>,
     ) -> Result<Self, ConfigError> {
-        let file: FileConfig = toml::from_str(text).map_err(|source| ConfigError::Parse {
-            path: path.to_path_buf(),
-            source: Box::new(source),
-        })?;
-        resolve(file, &env)
+        resolve(parse_file(path, text)?, &env)
     }
+}
+
+fn parse_file(path: &Path, text: &str) -> Result<FileConfig, ConfigError> {
+    toml::from_str(text).map_err(|source| ConfigError::Parse {
+        path: path.to_path_buf(),
+        source: Box::new(source),
+    })
 }
 
 fn resolve(file: FileConfig, env: &impl Fn(&str) -> Option<String>) -> Result<Config, ConfigError> {
@@ -109,18 +122,12 @@ fn resolve(file: FileConfig, env: &impl Fn(&str) -> Option<String>) -> Result<Co
             key: "domain",
             var: ENV_DOMAIN,
         })?;
-    let domain = validate_domain(domain)?;
+    let domain = validate_domain(&domain)?;
 
     let port = match env(ENV_PORT) {
-        Some(value) => parse_number("port", &value)?,
-        None => file.port.unwrap_or(DEFAULT_PORT),
+        Some(value) => validate_port(&value)?,
+        None => check_port(file.port.unwrap_or(DEFAULT_PORT))?,
     };
-    if port == 0 {
-        return Err(ConfigError::Invalid {
-            key: "port",
-            reason: "debe ser un número entre 1 y 65535".into(),
-        });
-    }
 
     let data_dir = env(ENV_DATA_DIR)
         .map(PathBuf::from)
@@ -128,29 +135,17 @@ fn resolve(file: FileConfig, env: &impl Fn(&str) -> Option<String>) -> Result<Co
         .unwrap_or_else(|| PathBuf::from(DEFAULT_DATA_DIR));
 
     let max_connections = match env(ENV_DATABASE_MAX_CONNECTIONS) {
-        Some(value) => parse_number("database.max_connections", &value)?,
-        None => file
-            .database
-            .max_connections
-            .unwrap_or(DEFAULT_MAX_CONNECTIONS),
+        Some(value) => validate_max_connections(&value)?,
+        None => check_max_connections(
+            file.database
+                .max_connections
+                .unwrap_or(DEFAULT_MAX_CONNECTIONS),
+        )?,
     };
-    if max_connections == 0 {
-        return Err(ConfigError::Invalid {
-            key: "database.max_connections",
-            reason: "debe ser al menos 1".into(),
-        });
-    }
 
-    let url = match (env(ENV_DATABASE_URL), env(ENV_DATABASE_URL_FILE)) {
-        (Some(_), Some(_)) => {
-            return Err(ConfigError::Conflict {
-                first: ENV_DATABASE_URL,
-                second: ENV_DATABASE_URL_FILE,
-            });
-        }
-        (Some(url), None) => url,
-        (None, Some(path)) => read_secret(PathBuf::from(path))?,
-        (None, None) => match (file.database.url, file.database.url_file) {
+    let url = match database_url_from_env(env)? {
+        Some(url) => url,
+        None => match (file.database.url, file.database.url_file) {
             (Some(_), Some(_)) => {
                 return Err(ConfigError::Conflict {
                     first: "database.url",
@@ -167,7 +162,7 @@ fn resolve(file: FileConfig, env: &impl Fn(&str) -> Option<String>) -> Result<Co
             }
         },
     };
-    let url = validate_database_url(url)?;
+    let url = validate_database_url(&url)?;
 
     Ok(Config {
         domain,
@@ -180,10 +175,24 @@ fn resolve(file: FileConfig, env: &impl Fn(&str) -> Option<String>) -> Result<Co
     })
 }
 
+pub fn database_url_from_env(
+    env: impl Fn(&str) -> Option<String>,
+) -> Result<Option<String>, ConfigError> {
+    match (env(ENV_DATABASE_URL), env(ENV_DATABASE_URL_FILE)) {
+        (Some(_), Some(_)) => Err(ConfigError::Conflict {
+            first: ENV_DATABASE_URL,
+            second: ENV_DATABASE_URL_FILE,
+        }),
+        (Some(url), None) => Ok(Some(url)),
+        (None, Some(path)) => read_secret(PathBuf::from(path)).map(Some),
+        (None, None) => Ok(None),
+    }
+}
+
 fn parse_number<T: FromStr>(key: &'static str, value: &str) -> Result<T, ConfigError> {
     value.trim().parse().map_err(|_| ConfigError::Invalid {
         key,
-        reason: format!("«{value}» no es un número válido"),
+        reason: InvalidReason::NotANumber(value.to_string()),
     })
 }
 
@@ -195,18 +204,14 @@ fn read_secret(path: PathBuf) -> Result<String, ConfigError> {
     }
 }
 
-fn validate_domain(domain: String) -> Result<String, ConfigError> {
+pub fn validate_domain(domain: &str) -> Result<String, ConfigError> {
     let domain = domain.trim().to_string();
     let reason = if domain.is_empty() {
-        Some("está vacío".to_string())
+        Some(InvalidReason::Empty)
     } else if domain.contains("://") {
-        Some(format!(
-            "«{domain}» lleva el protocolo; escribe solo el dominio, por ejemplo repositorio.ejemplo.edu"
-        ))
+        Some(InvalidReason::HasProtocol(domain.clone()))
     } else if domain.contains('/') || domain.chars().any(char::is_whitespace) {
-        Some(format!(
-            "«{domain}» no puede tener barras ni espacios; escribe solo el dominio"
-        ))
+        Some(InvalidReason::HasSlashOrSpace(domain.clone()))
     } else {
         None
     };
@@ -219,14 +224,76 @@ fn validate_domain(domain: String) -> Result<String, ConfigError> {
     }
 }
 
-fn validate_database_url(url: String) -> Result<String, ConfigError> {
+pub fn validate_port(value: &str) -> Result<u16, ConfigError> {
+    check_port(parse_number("port", value)?)
+}
+
+fn check_port(port: u16) -> Result<u16, ConfigError> {
+    if port == 0 {
+        return Err(ConfigError::Invalid {
+            key: "port",
+            reason: InvalidReason::PortOutOfRange,
+        });
+    }
+    Ok(port)
+}
+
+pub fn validate_max_connections(value: &str) -> Result<u32, ConfigError> {
+    check_max_connections(parse_number("database.max_connections", value)?)
+}
+
+fn check_max_connections(max_connections: u32) -> Result<u32, ConfigError> {
+    if max_connections == 0 {
+        return Err(ConfigError::Invalid {
+            key: "database.max_connections",
+            reason: InvalidReason::NoConnections,
+        });
+    }
+    Ok(max_connections)
+}
+
+pub fn validate_data_dir(value: &str) -> Result<PathBuf, ConfigError> {
+    let value = value.trim();
+    if value.is_empty() {
+        return Err(ConfigError::Invalid {
+            key: "data_dir",
+            reason: InvalidReason::Empty,
+        });
+    }
+    Ok(PathBuf::from(value))
+}
+
+pub fn validate_database_url(url: &str) -> Result<String, ConfigError> {
     let url = url.trim().to_string();
     if url.starts_with("postgres://") || url.starts_with("postgresql://") {
         Ok(url)
     } else {
         Err(ConfigError::Invalid {
             key: "database.url",
-            reason: "debe empezar con postgres:// o postgresql://".into(),
+            reason: InvalidReason::NotPostgres,
         })
     }
+}
+
+pub fn redact_url(url: &str) -> String {
+    let Some(scheme_end) = url.find("://") else {
+        return url.to_string();
+    };
+    let rest_start = scheme_end + 3;
+    let rest = &url[rest_start..];
+    let authority_end = rest.find(['/', '?', '#']).unwrap_or(rest.len());
+    let authority = &rest[..authority_end];
+    let Some(at) = authority.rfind('@') else {
+        return url.to_string();
+    };
+    let userinfo = &authority[..at];
+    let Some(colon) = userinfo.find(':') else {
+        return url.to_string();
+    };
+    format!(
+        "{}{}:***{}",
+        &url[..rest_start],
+        &userinfo[..colon],
+        &url[rest_start + at..]
+    )
 }
