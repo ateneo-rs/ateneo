@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2026 James Paul Vizuete Davila
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+pub mod detect;
+mod inspect;
 mod status;
 
 use std::io;
@@ -13,6 +15,7 @@ use sqlx::{ConnectOptions, Connection};
 
 use crate::config::DatabaseConfig;
 
+pub use inspect::{Incompatible, Inspection, MIN_SERVER_MAJOR, MIN_SERVER_VERSION, inspect};
 pub use status::{AppliedMigration, PendingMigration, Status, status};
 
 pub static MIGRATOR: Migrator = sqlx::migrate!();

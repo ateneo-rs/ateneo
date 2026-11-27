@@ -4,8 +4,9 @@
 use std::path::Path;
 use std::time::Duration;
 
-use ateneo_core::config::{self, DEFAULT_DATABASE_PORT, DatabaseConfig, DatabaseParts, NewConfig};
-use ateneo_core::db;
+use ateneo_core::config::{self, DatabaseConfig, DatabaseParts, NewConfig};
+use ateneo_core::db::detect::{self, Address};
+use ateneo_core::db::{self, Incompatible};
 use ateneo_core::install::{self, DatabaseSource, Install};
 use ateneo_core::settings;
 use sqlx::PgPool;
@@ -20,8 +21,8 @@ const CONNECT_ATTEMPTS: u32 = 10;
 const RETRY_DELAY: Duration = Duration::from_secs(3);
 const INIT_CONNECTIONS: u32 = 2;
 const DOCKER_MARKER: &str = "/.dockerenv";
-const LOCAL_HOST: &str = "localhost";
 const PROBE_TIMEOUT: Duration = Duration::from_millis(300);
+const FOREIGN_TABLES_SHOWN: usize = 5;
 
 enum Database {
     FromEnvironment { docker: bool },
@@ -29,9 +30,9 @@ enum Database {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum DatabaseChoice {
-    Environment,
-    Local,
+enum AfterFailure {
+    Retry,
+    OtherServer,
 }
 
 struct Answers {
@@ -58,6 +59,7 @@ pub async fn run() -> Result<(), Exit> {
     let _installer_language = ask_installer_language()?;
     let domain = ask_domain()?;
     let (pool, database) = connect().await?;
+    check_database(&pool).await?;
     let site_language = ask_site_language()?;
     let timezone = ask_timezone(&pool).await?;
 
@@ -169,108 +171,155 @@ fn ask_domain() -> Result<String, Exit> {
     )
 }
 
+fn env_var(name: &str) -> Option<String> {
+    std::env::var(name).ok()
+}
+
 async fn connect() -> Result<(PgPool, Database), Exit> {
-    let environment = config::database_url_from_env(|name| std::env::var(name).ok())?;
     let docker = Path::new(DOCKER_MARKER).exists();
-    let local = db::is_listening(LOCAL_HOST, DEFAULT_DATABASE_PORT, PROBE_TIMEOUT);
-    let mut previous: Option<DatabaseParts> = None;
-
-    loop {
-        let mut choices = Vec::new();
-        if environment.is_some() {
-            choices.push(Choice {
-                value: DatabaseChoice::Environment,
-                label: if docker {
-                    t("init-db-choice-docker")
-                } else {
-                    t("init-db-choice-environment")
-                },
-                hint: t("hint-detected"),
-            });
-        }
-        if local {
-            choices.push(Choice {
-                value: DatabaseChoice::Local,
-                label: tr(
-                    "init-db-choice-local",
-                    &[
-                        ("host", LOCAL_HOST.to_string()),
-                        ("port", DEFAULT_DATABASE_PORT.to_string()),
-                    ],
-                ),
-                hint: t("hint-detected"),
-            });
-        }
-
-        let picked = prompt::choose(&t("init-db"), choices)?;
-        let parts = match (picked, &environment) {
-            (Some(DatabaseChoice::Environment), Some(url)) => {
-                if let Some(pool) = connect_with_retries(url, docker).await? {
-                    return Ok((pool, Database::FromEnvironment { docker }));
-                }
-                continue;
+    if let Some(url) = config::database_url_from_env(env_var)? {
+        return match connect_with_retries(&url, docker).await? {
+            Some(pool) => Ok((pool, Database::FromEnvironment { docker })),
+            None => {
+                cliclack::outro_cancel(t("init-db-gave-up")).or_cancel()?;
+                Err(Exit::Reported)
             }
-            (Some(DatabaseChoice::Local), _) => {
-                ask_parts(Some((LOCAL_HOST, DEFAULT_DATABASE_PORT)), previous.as_ref())?
-            }
-            _ => ask_parts(None, previous.as_ref())?,
         };
+    }
 
+    let candidates = detect::candidates(env_var, docker);
+    let mut server = match detect::detect(&candidates, PROBE_TIMEOUT) {
+        Some(address) => {
+            cliclack::log::success(tr(
+                "init-db-detected",
+                &[
+                    ("host", address.host.clone()),
+                    ("port", address.port.to_string()),
+                ],
+            ))
+            .or_cancel()?;
+            Some(address)
+        }
+        None => {
+            cliclack::log::warning(t("init-db-not-found")).or_cancel()?;
+            None
+        }
+    };
+
+    let mut previous: Option<DatabaseParts> = None;
+    loop {
+        let address = match server.take() {
+            Some(address) => address,
+            None => ask_address()?,
+        };
+        let parts = ask_credentials(&address, previous.as_ref())?;
         let url = parts.to_url();
         if let Some(pool) = try_connect(&url).await {
             return Ok((pool, Database::Typed(url)));
         }
+
+        let next = cliclack::select(t("init-db-failed-next"))
+            .item(AfterFailure::Retry, t("init-db-retry"), "")
+            .item(AfterFailure::OtherServer, t("init-db-other-server"), "")
+            .interact()
+            .or_cancel()?;
+        server = match next {
+            AfterFailure::Retry => Some(address),
+            AfterFailure::OtherServer => None,
+        };
         previous = Some(parts);
     }
 }
 
-fn ask_parts(
-    fixed: Option<(&str, u16)>,
+fn ask_address() -> Result<Address, Exit> {
+    let suggested = detect::suggested_address(env_var);
+    let host = prompt::text(
+        &t("init-db-host"),
+        &t("init-db-host-example"),
+        Some(&suggested.host),
+        |value| config::validate_host(value).map_err(|err| config_error(&err)),
+    )?;
+    let port = prompt::text(
+        &t("init-db-port"),
+        &t("init-db-port-example"),
+        Some(&suggested.port.to_string()),
+        |value| {
+            config::validate_port(value)
+                .map(|port| port.to_string())
+                .map_err(|err| config_error(&err))
+        },
+    )?;
+    Ok(Address {
+        host,
+        port: config::validate_port(&port)?,
+    })
+}
+
+fn ask_credentials(
+    address: &Address,
     previous: Option<&DatabaseParts>,
 ) -> Result<DatabaseParts, Exit> {
-    let (host, port) = match fixed {
-        Some((host, port)) => (host.to_string(), port),
-        None => {
-            let host = prompt::text(
-                &t("init-db-host"),
-                &t("init-db-host-example"),
-                previous.map(|parts| parts.host.as_str()),
-                |value| config::validate_host(value).map_err(|err| config_error(&err)),
-            )?;
-            let previous_port = previous.map(|parts| parts.port.to_string());
-            let port = prompt::text(
-                &t("init-db-port"),
-                &t("init-db-port-example"),
-                previous_port.as_deref(),
-                |value| {
-                    config::validate_port(value)
-                        .map(|port| port.to_string())
-                        .map_err(|err| config_error(&err))
-                },
-            )?;
-            (host, config::validate_port(&port)?)
-        }
-    };
-    let user = prompt::text(
-        &t("init-db-user"),
-        &t("init-db-user-example"),
-        previous.map(|parts| parts.user.as_str()),
-        |value| config::validate_name("database.user", value).map_err(|err| config_error(&err)),
-    )?;
-    let password = prompt::password(&t("init-db-password"))?;
+    let suggested_database = previous
+        .map(|parts| parts.database.clone())
+        .unwrap_or_else(|| detect::suggested_database(env_var));
     let database = prompt::text(
         &t("init-db-name"),
         &t("init-db-name-example"),
-        previous.map(|parts| parts.database.as_str()),
+        Some(&suggested_database),
         |value| config::validate_name("database.name", value).map_err(|err| config_error(&err)),
     )?;
+    let suggested_user = previous
+        .map(|parts| parts.user.clone())
+        .unwrap_or_else(|| detect::suggested_user(env_var));
+    let user = prompt::text(
+        &t("init-db-user"),
+        &t("init-db-user-example"),
+        Some(&suggested_user),
+        |value| config::validate_name("database.user", value).map_err(|err| config_error(&err)),
+    )?;
+    let password = prompt::password(&t("init-db-password"))?;
     Ok(DatabaseParts {
-        host,
-        port,
+        host: address.host.clone(),
+        port: address.port,
         user,
         password,
         database,
     })
+}
+
+async fn check_database(pool: &PgPool) -> Result<(), Exit> {
+    let inspection = db::inspect(pool)
+        .await
+        .map_err(|err| Exit::Failed(query_error(&err)))?;
+    let Err(problem) = inspection.check() else {
+        return Ok(());
+    };
+    cliclack::log::error(incompatible(&problem)).or_cancel()?;
+    cliclack::outro_cancel(t("init-db-stopped")).or_cancel()?;
+    Err(Exit::Reported)
+}
+
+pub fn incompatible(problem: &Incompatible) -> String {
+    match problem {
+        Incompatible::OldServer { version } => tr(
+            "init-db-old-server",
+            &[
+                ("version", version.clone()),
+                ("minimum", db::MIN_SERVER_MAJOR.to_string()),
+            ],
+        ),
+        Incompatible::ForeignTables(tables) => {
+            let mut shown: Vec<String> =
+                tables.iter().take(FOREIGN_TABLES_SHOWN).cloned().collect();
+            if tables.len() > FOREIGN_TABLES_SHOWN {
+                shown.push(tr(
+                    "init-db-foreign-more",
+                    &[("count", (tables.len() - FOREIGN_TABLES_SHOWN).to_string())],
+                ));
+            }
+            tr("init-db-foreign-tables", &[("tables", shown.join(", "))])
+        }
+    }
 }
 
 async fn try_connect(url: &str) -> Option<PgPool> {
@@ -463,6 +512,28 @@ mod tests {
         assert!(!choices[0].value.contains(&choices[0].hint));
         assert_eq!(choices[1].value, "en");
         assert!(choices[1].hint.is_empty());
+    }
+
+    #[test]
+    fn old_server_message_names_both_versions() {
+        let message = incompatible(&Incompatible::OldServer {
+            version: "14.12".into(),
+        });
+
+        assert!(message.contains("14.12"));
+        assert!(message.contains(&db::MIN_SERVER_MAJOR.to_string()));
+    }
+
+    #[test]
+    fn foreign_tables_message_lists_only_a_few() {
+        let tables: Vec<String> = (1..=8).map(|n| format!("public.tabla{n}")).collect();
+
+        let message = incompatible(&Incompatible::ForeignTables(tables));
+
+        assert!(message.contains("public.tabla1"));
+        assert!(message.contains("public.tabla5"));
+        assert!(!message.contains("public.tabla6"));
+        assert!(message.contains("3"));
     }
 
     #[test]

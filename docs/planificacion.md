@@ -770,6 +770,7 @@ Estos temas no entran en la base inicial; la investigación pendiente se hace cu
 | Asistente de IA | Medir rendimiento y elegir cómo guardar los vectores (pgvector u otra opción en Rust) | Base preparada en 0.1; fase 1 en 0.6+ | Mediciones del prototipo |
 | Respaldos incrementales | Integrar rustic_core | Después de la 1.0 | Uso real |
 | Extensiones de la comunidad | Sistema en WebAssembly | Después de la 1.0 | API estable |
+| Crear usuario y base desde init | Opción "créalo por mí" con el usuario administrador de PostgreSQL, sin guardar su contraseña | Después de la 0.1 | — |
 
 ### Biblioteca abierta (en investigación)
 
