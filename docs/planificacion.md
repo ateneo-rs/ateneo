@@ -311,8 +311,8 @@ Ateneo avanza en cinco etapas, de la 0.1 a la 1.0, y la alfa (0.2) se probaría 
 
 | Versión | Etapa | Contenido |
 |---|---|---|
-| 0.1 | Cimientos | Instalación por consola, modelo de datos, cuentas, roles y 2FA. Depósito, sitio público, búsqueda y OAI-PMH |
-| 0.2 | Alfa | Importación desde DSpace con redirecciones, visor PDF y citas. Respaldos, logo y pruebas en el ISTS (por confirmar) |
+| 0.1 | Cimientos | Instalación por consola, modelo de datos, cuentas del personal, roles y 2FA. Depósito con ARK, sitio público, búsqueda y OAI-PMH. Respaldo manual con `ateneo backup now` (local y sin cifrar, solo para pruebas) |
+| 0.2 | Alfa | Inicio de sesión con Google o Microsoft y cuentas de lector. Importación desde DSpace con redirecciones, visor PDF y citas. Respaldos programados y cifrados, logo y pruebas en el ISTS (por confirmar) |
 | 0.3 a 0.5 | Beta | OCR, estadísticas, tipografías instalables y páginas legales. Asistente completo y medición de requisitos del servidor |
 | 0.6+ | Módulos | Fase 1 de la IA y biblioteca abierta, si la investigación la aprueba. Más tipos de obra y módulos opcionales |
 | 1.0 | Producción | Versión estable para cualquier institución. Open Collective e informes de transparencia |

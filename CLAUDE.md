@@ -8,6 +8,7 @@ Repositorio institucional en Rust, alternativa a DSpace. Licencia AGPL-3.0-or-la
 - Cada archivo de código lleva el encabezado SPDX: AGPL-3.0-or-later.
 - Responde y explica en español sencillo.
 - Antes de planificar o construir, consulta docs/planificacion.md (y los PDF de docs/planificacion/ para ver los mockups).
+- La estructura y el orden de la 0.1 están en docs/arquitectura-0.1.md.
 
 ## Stack
 Rust (edición 2024), Axum, sqlx con PostgreSQL, Tantivy, minijinja para el sitio público,
@@ -15,4 +16,6 @@ React + MUI para el panel, un solo binario, cliclack para la instalación por co
 
 ## Ahora
 Versión 0.1 (Cimientos): estructura del proyecto, instalación por consola,
-modelo de datos, cuentas, roles y 2FA, depósito, sitio público, búsqueda y OAI-PMH.
+modelo de datos, cuentas del personal, roles y 2FA, depósito con ARK, sitio público,
+búsqueda, OAI-PMH y backup now (local y sin cifrar, solo para pruebas).
+Google/Microsoft y las cuentas de lector pasan a la 0.2.
