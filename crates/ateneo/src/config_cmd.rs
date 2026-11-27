@@ -12,9 +12,11 @@ use ateneo_core::settings::{self, SettingKey};
 use serde_json::json;
 use sqlx::PgPool;
 
-use crate::exit::{Exit, Prompt, config_error, is_interactive};
+use crate::exit::{Exit, Prompt, config_error};
 use crate::i18n::{t, tr};
-use crate::init::language_name;
+use crate::init::language_list;
+use crate::prompt;
+use crate::terminal::is_interactive;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Target {
@@ -53,6 +55,18 @@ impl Target {
             Self::File(FileKey::DatabaseMaxConnections) => t("option-max-connections"),
             Self::Setting(SettingKey::SiteLanguage) => t("option-site-language"),
             Self::Setting(SettingKey::SiteTimezone) => t("option-site-timezone"),
+        }
+    }
+
+    fn example(self) -> String {
+        match self {
+            Self::File(FileKey::Domain) => t("init-domain-example"),
+            Self::File(FileKey::Port) => t("example-port"),
+            Self::File(FileKey::DataDir) => t("example-data-dir"),
+            Self::File(FileKey::DatabaseUrl) => t("example-database-url"),
+            Self::File(FileKey::DatabaseMaxConnections) => t("example-max-connections"),
+            Self::Setting(SettingKey::SiteLanguage) => t("language-example"),
+            Self::Setting(SettingKey::SiteTimezone) => t("init-timezone-example"),
         }
     }
 
@@ -129,15 +143,16 @@ pub async fn menu() -> Result<(), Exit> {
     let target = select.interact().or_cancel()?;
     let current = current(&context, target).await?;
 
+    let keep = current
+        .as_deref()
+        .filter(|_| target != Target::File(FileKey::DatabaseUrl));
     let change = loop {
-        let mut input = cliclack::input(tr("config-new-value", &[("option", target.label())]));
-        if let Some(current) = current
-            .as_deref()
-            .filter(|_| target != Target::File(FileKey::DatabaseUrl))
-        {
-            input = input.placeholder(current).default_input(current);
-        }
-        let raw: String = input.interact().or_cancel()?;
+        let raw = prompt::text(
+            &tr("config-new-value", &[("option", target.label())]),
+            &target.example(),
+            keep,
+            |value| Ok(value.to_string()),
+        )?;
         match prepare(&context, target, &raw).await {
             Ok(change) => break change,
             Err(Exit::Failed(message)) => cliclack::log::error(message).or_cancel()?,
@@ -153,11 +168,7 @@ pub async fn menu() -> Result<(), Exit> {
         cliclack::log::warning(message).or_cancel()
     })?;
     cliclack::note(t("config-review"), change.lines()).or_cancel()?;
-    let confirmed = cliclack::confirm(t("config-confirm"))
-        .initial_value(false)
-        .interact()
-        .or_cancel()?;
-    if !confirmed {
+    if !prompt::yes_no(&t("config-confirm"), false)? {
         cliclack::outro_cancel(t("config-not-confirmed")).or_cancel()?;
         return Err(Exit::Cancelled);
     }
@@ -209,15 +220,9 @@ pub async fn set(name: &str, raw: &str, yes: bool) -> Result<(), Exit> {
         eprintln!("{}", tr("warning-line", &[("message", message)]));
         Ok(())
     })?;
-    if !yes {
-        let confirmed = cliclack::confirm(t("config-confirm"))
-            .initial_value(false)
-            .interact()
-            .or_cancel()?;
-        if !confirmed {
-            eprintln!("{}", t("config-not-confirmed"));
-            return Err(Exit::Cancelled);
-        }
+    if !yes && !prompt::yes_no(&t("config-confirm"), false)? {
+        eprintln!("{}", t("config-not-confirmed"));
+        return Err(Exit::Cancelled);
     }
 
     apply(&context, change).await?;
@@ -290,14 +295,7 @@ fn invalid_setting(key: SettingKey, value: &str) -> String {
             "config-language-invalid",
             &[
                 ("value", value.to_string()),
-                (
-                    "options",
-                    settings::SITE_LANGUAGES
-                        .iter()
-                        .map(|code| format!("{code} ({})", language_name(code)))
-                        .collect::<Vec<_>>()
-                        .join(", "),
-                ),
+                ("options", language_list(settings::SITE_LANGUAGES)),
             ],
         ),
         SettingKey::SiteTimezone => tr("init-timezone-invalid", &[("zone", value.to_string())]),

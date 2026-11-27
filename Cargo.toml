@@ -15,10 +15,13 @@ repository = "https://github.com/ateneo-rs/ateneo"
 ateneo-core = { path = "crates/ateneo-core", version = "0.1.0" }
 clap = { version = "4.6", default-features = false, features = ["std", "help", "usage", "error-context", "string"] }
 cliclack = "0.5"
+console = { version = "0.16", default-features = false }
 fluent-templates = "0.15"
 iana-time-zone = "0.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+sys-locale = "0.3"
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_Console"] }
 sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "tls-rustls", "postgres", "macros", "migrate", "json"] }
 thiserror = "2.0"
 tokio = { version = "1.54", features = ["macros", "rt", "time"] }

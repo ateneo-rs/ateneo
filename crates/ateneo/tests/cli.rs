@@ -78,6 +78,7 @@ fn without_subcommand_shows_help() {
     assert!(text.contains("init"));
     assert!(text.contains("config"));
     assert!(text.contains("status"));
+    assert!(!text.contains("Usage"));
 }
 
 #[test]
@@ -292,7 +293,39 @@ fn status_reports_a_failed_connection() {
     let output = ateneo(Some(&path), &["status"]);
 
     assert!(!output.status.success());
-    assert!(stdout(&output).contains("Conexión: falló"));
-    assert!(!stdout(&output).contains("clave"));
+    let text = stdout(&output);
+    assert!(text.contains("Conexión: falló"));
+    assert!(text.contains("No hay un servidor PostgreSQL en esa dirección."));
+    assert!(!text.contains("Detalle técnico"));
+    assert!(!text.contains("clave"));
+
+    let verbose = ateneo(Some(&path), &["status", "--verbose"]);
+    assert!(stdout(&verbose).contains("Detalle técnico"));
+
+    let before = ateneo(Some(&path), &["--verbose", "status"]);
+    assert!(stdout(&before).contains("Detalle técnico"));
     fs::remove_file(&path).unwrap();
+}
+
+#[sqlx::test(migrations = false)]
+async fn status_explains_wrong_credentials(pool: PgPool) {
+    let path = installed(&pool, "status-password").await;
+    let text = fs::read_to_string(&path).unwrap();
+    fs::write(&path, text.replace(":ateneo@", ":incorrecta@")).unwrap();
+
+    let output = ateneo(Some(&path), &["status"]);
+
+    assert!(!output.status.success());
+    let text = stdout(&output);
+    assert!(text.contains("El usuario o la contraseña de PostgreSQL no son correctos."));
+    assert!(!text.contains("28P01"));
+    assert!(!text.contains("incorrecta"));
+    fs::remove_file(&path).unwrap();
+}
+
+#[test]
+fn help_mentions_verbose() {
+    let output = ateneo(None, &["--help"]);
+
+    assert!(stdout(&output).contains("--verbose"));
 }

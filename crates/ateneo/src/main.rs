@@ -6,17 +6,23 @@ mod config_cmd;
 mod exit;
 mod i18n;
 mod init;
+mod prompt;
 mod status;
+mod terminal;
 
 use std::process::ExitCode;
 
+use clap::ArgMatches;
+
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> ExitCode {
+    let _terminal = terminal::setup();
     let mut command = cli::command();
     let matches = match command.try_get_matches_from_mut(std::env::args_os()) {
         Ok(matches) => matches,
         Err(err) => err.exit(),
     };
+    exit::set_verbose(verbose(&matches));
 
     let result = match matches.subcommand() {
         Some((cli::INIT, _)) => init::run().await,
@@ -43,4 +49,15 @@ async fn main() -> ExitCode {
         Ok(()) => ExitCode::SUCCESS,
         Err(exit) => exit.report(),
     }
+}
+
+fn verbose(matches: &ArgMatches) -> bool {
+    let mut current = Some(matches);
+    while let Some(level) = current {
+        if level.get_flag(cli::VERBOSE) {
+            return true;
+        }
+        current = level.subcommand().map(|(_, sub)| sub);
+    }
+    false
 }

@@ -1,11 +1,12 @@
 // SPDX-FileCopyrightText: 2026 James Paul Vizuete Davila
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::io::{self, IsTerminal};
+use std::io;
 use std::process::ExitCode;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use ateneo_core::config::{ConfigError, InvalidReason};
-use ateneo_core::db::DbError;
+use ateneo_core::db::{ConnectProblem, DbError};
 
 use crate::i18n::{t, tr};
 
@@ -58,14 +59,27 @@ impl<T> Prompt<T> for io::Result<T> {
                 let _ = cliclack::outro_cancel(t("cancelled"));
                 Exit::Cancelled
             } else {
-                Exit::Failed(tr("error-terminal", &[("detail", err.to_string())]))
+                Exit::Failed(terminal_error(&err))
             }
         })
     }
 }
 
-pub fn is_interactive() -> bool {
-    io::stdin().is_terminal() && io::stderr().is_terminal()
+static VERBOSE: AtomicBool = AtomicBool::new(false);
+
+pub fn set_verbose(verbose: bool) {
+    VERBOSE.store(verbose, Ordering::Relaxed);
+}
+
+fn with_detail(message: String, detail: impl ToString) -> String {
+    if VERBOSE.load(Ordering::Relaxed) {
+        format!(
+            "{message}\n{}",
+            tr("error-detail", &[("detail", detail.to_string())])
+        )
+    } else {
+        message
+    }
 }
 
 pub fn config_error(err: &ConfigError) -> String {
@@ -141,12 +155,32 @@ pub fn invalid_reason(reason: &InvalidReason) -> String {
 }
 
 pub fn db_error(err: &DbError) -> String {
-    match err {
-        DbError::Connect(source) => tr("db-error-connect", &[("detail", source.to_string())]),
-        DbError::Migrate(source) => tr("db-error-migrate", &[("detail", source.to_string())]),
+    let message = match err.problem() {
+        Some(problem) => connect_problem(problem),
+        None => t("db-error-migrate"),
+    };
+    let detail = match err {
+        DbError::Connect(source) => source.to_string(),
+        DbError::ConnectTimeout => err.to_string(),
+        DbError::Migrate(source) => source.to_string(),
+    };
+    with_detail(message, detail)
+}
+
+pub fn connect_problem(problem: ConnectProblem) -> String {
+    match problem {
+        ConnectProblem::BadCredentials => t("db-error-credentials"),
+        ConnectProblem::NoServer => t("db-error-no-server"),
+        ConnectProblem::DatabaseMissing => t("db-error-database-missing"),
+        ConnectProblem::Timeout => t("db-error-timeout"),
+        ConnectProblem::Other => t("db-error-connect"),
     }
 }
 
 pub fn query_error(err: &sqlx::Error) -> String {
-    tr("db-error-query", &[("detail", err.to_string())])
+    with_detail(t("db-error-query"), err)
+}
+
+pub fn terminal_error(err: &io::Error) -> String {
+    with_detail(t("error-terminal"), err)
 }

@@ -16,8 +16,13 @@ repository.workspace = true
 ateneo-core.workspace = true
 clap.workspace = true
 cliclack.workspace = true
+console.workspace = true
 fluent-templates.workspace = true
 iana-time-zone.workspace = true
 serde_json.workspace = true
 sqlx.workspace = true
+sys-locale.workspace = true
 tokio.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows-sys.workspace = true

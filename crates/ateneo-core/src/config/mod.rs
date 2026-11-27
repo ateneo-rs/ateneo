@@ -3,6 +3,7 @@
 
 mod error;
 mod file;
+mod url;
 
 use std::fmt;
 use std::fs;
@@ -14,6 +15,7 @@ use serde::Deserialize;
 
 pub use error::{ConfigError, InvalidReason};
 pub use file::{Edit, FileKey, NewConfig, create_new, current_value, prepare_edit, replace};
+pub use url::{DEFAULT_DATABASE_PORT, DatabaseParts, redact_url, validate_host, validate_name};
 
 pub const DEFAULT_PATH: &str = "ateneo.toml";
 pub const DEFAULT_PORT: u16 = 8080;
@@ -273,27 +275,4 @@ pub fn validate_database_url(url: &str) -> Result<String, ConfigError> {
             reason: InvalidReason::NotPostgres,
         })
     }
-}
-
-pub fn redact_url(url: &str) -> String {
-    let Some(scheme_end) = url.find("://") else {
-        return url.to_string();
-    };
-    let rest_start = scheme_end + 3;
-    let rest = &url[rest_start..];
-    let authority_end = rest.find(['/', '?', '#']).unwrap_or(rest.len());
-    let authority = &rest[..authority_end];
-    let Some(at) = authority.rfind('@') else {
-        return url.to_string();
-    };
-    let userinfo = &authority[..at];
-    let Some(colon) = userinfo.find(':') else {
-        return url.to_string();
-    };
-    format!(
-        "{}{}:***{}",
-        &url[..rest_start],
-        &userinfo[..colon],
-        &url[rest_start + at..]
-    )
 }

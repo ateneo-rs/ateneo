@@ -12,6 +12,7 @@ pub const STATUS: &str = "status";
 pub const OPTION: &str = "option";
 pub const VALUE: &str = "value";
 pub const YES: &str = "yes";
+pub const VERBOSE: &str = "verbose";
 
 pub fn command() -> Command {
     base(Command::new("ateneo"), Sections::Commands)
@@ -19,6 +20,13 @@ pub fn command() -> Command {
         .version(env!("CARGO_PKG_VERSION"))
         .override_usage(t("cli-usage"))
         .disable_version_flag(true)
+        .arg(
+            Arg::new(VERBOSE)
+                .long(VERBOSE)
+                .global(true)
+                .action(ArgAction::SetTrue)
+                .help(t("cli-verbose-flag")),
+        )
         .arg(
             Arg::new("version")
                 .short('V')
