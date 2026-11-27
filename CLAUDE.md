@@ -7,7 +7,7 @@ Repositorio institucional en Rust, alternativa a DSpace. Licencia AGPL-3.0-or-la
 - No agregar la línea Co-Authored-By en los commits.
 - Cada archivo de código lleva el encabezado SPDX: AGPL-3.0-or-later.
 - Responde y explica en español sencillo.
-- Antes de planificar o construir, consulta docs/planificacion.md (y los PDF de docs/planificacion/ para ver los mockups).
+- Antes de construir algo, lee solo la sección de docs/planificacion.md y de docs/arquitectura-0.1.md que corresponda a la tarea. Abre los PDF solo si necesitas ver un mockup.
 - La estructura y el orden de la 0.1 están en docs/arquitectura-0.1.md.
 
 ## Stack
