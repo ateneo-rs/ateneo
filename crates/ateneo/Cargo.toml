@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 James Paul Vizuete Davila
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+[package]
+name = "ateneo"
+description = "Ateneo: institutional open access repository written in Rust (OAI-PMH, IIIF, SWORD). Archivo de Tesis, Ensayos, Notas, Ediciones y Obras."
+keywords = ["repository", "oai-pmh", "iiif", "open-access", "dspace"]
+categories = ["web-programming"]
+version.workspace = true
+edition.workspace = true
+license = "AGPL-3.0-or-later"
+authors.workspace = true
+repository.workspace = true

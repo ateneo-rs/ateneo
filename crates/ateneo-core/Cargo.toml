@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 James Paul Vizuete Davila
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+[package]
+name = "ateneo-core"
+description = "Core of Ateneo, the institutional repository: configuration, database and shared services."
+keywords = ["repository", "oai-pmh", "open-access", "dspace"]
+categories = ["web-programming"]
+version.workspace = true
+edition.workspace = true
+license = "AGPL-3.0-or-later"
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde.workspace = true
+sqlx.workspace = true
+thiserror.workspace = true
+toml.workspace = true

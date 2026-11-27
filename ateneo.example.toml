@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 James Paul Vizuete Davila
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+domain = "repositorio.ejemplo.edu.ec"
+port = 8080
+data_dir = "datos"
+
+[database]
+url = "postgres://ateneo:ateneo@localhost:5432/ateneo"
+max_connections = 10

@@ -2,7 +2,7 @@
 Repositorio institucional en Rust, alternativa a DSpace. Licencia AGPL-3.0-or-later.
 
 ## Reglas
-- Código sin comentarios de ningún tipo.
+- Código sin comentarios de ningún tipo. La única excepción es la línea SPDX del encabezado, con la sintaxis de comentario de cada lenguaje.
 - Mensajes de commit siempre en inglés, con Conventional Commits y firmados con git commit -s.
 - No agregar la línea Co-Authored-By en los commits.
 - Cada archivo de código lleva el encabezado SPDX: AGPL-3.0-or-later.

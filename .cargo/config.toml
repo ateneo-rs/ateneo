@@ -1,0 +1,5 @@
+# SPDX-FileCopyrightText: 2026 James Paul Vizuete Davila
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+[env]
+DATABASE_URL = "postgres://ateneo:ateneo@localhost:5432/ateneo"

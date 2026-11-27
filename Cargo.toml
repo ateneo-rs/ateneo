@@ -1,12 +1,18 @@
-[package]
-name = "ateneo"
-version = "0.0.1"
+# SPDX-FileCopyrightText: 2026 James Paul Vizuete Davila
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+[workspace]
+resolver = "3"
+members = ["crates/ateneo", "crates/ateneo-core"]
+
+[workspace.package]
+version = "0.1.0"
 edition = "2024"
-description = "Ateneo: institutional open access repository written in Rust (OAI-PMH, IIIF, SWORD). Archivo de Tesis, Ensayos, Notas, Ediciones y Obras."
-license = "AGPL-3.0-or-later"
 authors = ["James Paul Vizuete Davila <jamespnpm1624@outlook.com>"]
 repository = "https://github.com/ateneo-rs/ateneo"
-keywords = ["repository", "oai-pmh", "iiif", "open-access", "dspace"]
-categories = ["web-programming"]
 
-[dependencies]
+[workspace.dependencies]
+serde = { version = "1.0", features = ["derive"] }
+sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "tls-rustls", "postgres", "macros", "migrate"] }
+thiserror = "2.0"
+toml = "1.2"

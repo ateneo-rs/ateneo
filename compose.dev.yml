@@ -1,0 +1,24 @@
+# SPDX-FileCopyrightText: 2026 James Paul Vizuete Davila
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+name: ateneo-dev
+
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ateneo
+      POSTGRES_PASSWORD: ateneo
+      POSTGRES_DB: ateneo
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ateneo -d ateneo"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  postgres:
