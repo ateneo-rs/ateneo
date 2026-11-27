@@ -485,7 +485,7 @@ La página **"Cómo usamos tus datos"** explica qué se mide y para qué, y ofre
 > Abajo, el interruptor "No contar mis visitas" con la nota "También respetamos la señal Global Privacy Control".
 
 > **Mockup · política de cookies y aviso Aceptar / Rechazar** ("La política de cookies se genera sola y el aviso solo aparece con terceros").
-> Arriba, la "Política de cookies" con una tabla de nombre, uso y duración: `ateneo_sesion` (mantener la sesión iniciada, hasta cerrar sesión), `ateneo_csrf` (seguridad de los formularios, sesión) y Preferencias (accesibilidad y estilo de cita, hasta borrarlas), y la nota "Este sitio solo usa cookies necesarias. MÃ¡s informaciÃ³n".
+> Arriba, la "Política de cookies" con una tabla de nombre, uso y duración: `ateneo_sesion` (mantener la sesión iniciada, hasta cerrar sesión), `ateneo_csrf` (seguridad de los formularios, sesión) y Preferencias (accesibilidad y estilo de cita, hasta borrarlas), y la nota "Este sitio solo usa cookies necesarias. Más información".
 > Abajo, un aviso de ejemplo "Este sitio usa Google Analytics, agregado por la institución" con los botones Rechazar y Aceptar del mismo tamaño; la nota aclara que el aviso solo aparece si la institución agrega servicios de terceros.
 
 ### Páginas legales
@@ -791,7 +791,7 @@ La idea es sumar libros académicos de acceso abierto para leerlos en el visor d
 
 > **Mockup · biblioteca abierta (en investigación)** ("La biblioteca abierta elegiría fuentes, idioma y licencias antes de importar").
 > Con la etiqueta "En investigación", tres columnas: Fuentes ("DOAB y OAPEN" y "SciELO Libros" marcadas; CLACSO y Project Gutenberg sin marcar), Filtros (idioma español; temas ambiente, software y salud; licencias CC BY, BY-SA, BY-NC y BY-ND) y Modo (Bajo demanda elegido, o Copia completa).
-> Abajo, "Vista previa: 1.240 libros encontrados · Unos 4 GB si se copian todos · los de "solo uso personal" se excluyen", con el botón Importar.
+> Abajo, "Vista previa: 1.240 libros encontrados · Unos 4 GB si se copian todos · los de 'solo uso personal' se excluyen", con el botón Importar.
 
 ### Asistente de IA (futuro)
 
